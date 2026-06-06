@@ -1,1 +1,1 @@
-# OdooKSV_Vender
+# OdooKSV_Vendor

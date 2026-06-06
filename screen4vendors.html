@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendorBridge – Vendors</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --surface: #12161a;
+    --surface2: #1c2229;
+    --input-bg: #080a0c;
+    --border: #222b35;
+    --accent: #714b67;
+    --accent2: #017e84;
+    --accent-dim: rgba(113, 75, 103, 0.15);
+    --text: #f1f5f9;
+    --muted: #64748b;
+    --nav-active: #1e2631;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --step-done: #10b981;
+    --status-active: #10b981;
+    --status-pending: #f59e0b;
+    --status-blocked: #ef4444;
+  }
+ 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+ 
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px; min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.15rem;
+    letter-spacing: -0.5px;
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo span { color: var(--accent); }
+  nav { padding: 14px 0; flex: 1; }
+  nav a {
+    display: block; padding: 10px 20px;
+    font-size: 0.82rem; color: var(--muted);
+    text-decoration: none; letter-spacing: 0.3px;
+    transition: color 0.15s, background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  nav a:hover { color: var(--text); background: var(--surface2); }
+  nav a.active {
+    color: var(--accent);
+    background: var(--accent-dim);
+    border-left: 3px solid var(--accent);
+    font-weight: 500;
+  }
+  nav a::before { content: '– '; }
+ 
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+ 
+  .topbar {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .topbar-search {
+    flex: 1; max-width: 320px;
+    background: var(--input-bg);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 12px; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  .topbar-search:focus { border-color: var(--accent); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700;
+  }
+ 
+  /* ── CONTENT ── */
+  .content { flex: 1; overflow-y: auto; padding: 28px 32px; }
+  .content::-webkit-scrollbar { width: 5px; }
+  .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+ 
+  /* ── PAGE HEADER ── */
+  .page-header {
+    display: flex; align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 22px;
+  }
+  .page-header-left h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.55rem; font-weight: 800;
+    letter-spacing: -0.5px; margin-bottom: 3px;
+  }
+  .page-header-left .subtitle {
+    font-size: 0.78rem; color: var(--muted);
+  }
+ 
+  /* ── SEARCH BAR ── */
+  .vendor-search-wrap {
+    margin-bottom: 18px;
+  }
+  .vendor-search {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 14px; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 0.82rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  .vendor-search:focus { border-color: var(--accent); }
+  .vendor-search::placeholder { color: var(--muted); }
+ 
+  /* ── FILTER TABS ── */
+  .filter-tabs {
+    display: flex; gap: 8px;
+    margin-bottom: 20px;
+  }
+  .filter-tab {
+    padding: 5px 14px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.2px;
+  }
+  .filter-tab:hover { color: var(--text); border-color: var(--muted); }
+  .filter-tab.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .filter-tab .count {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    margin-left: 5px;
+    color: var(--muted);
+  }
+  .filter-tab.active .count {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+ 
+  /* ── TABLE ── */
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+ 
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+ 
+  thead th {
+    background: var(--surface2);
+    padding: 11px 16px;
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+ 
+  thead th:first-child { padding-left: 20px; }
+ 
+  tbody tr {
+    border-top: 1px solid var(--border);
+    transition: background 0.12s;
+    cursor: pointer;
+  }
+  tbody tr:hover { background: rgba(255,255,255,0.025); }
+ 
+  tbody td {
+    padding: 14px 16px;
+    color: var(--text);
+    vertical-align: middle;
+  }
+  tbody td:first-child { padding-left: 20px; }
+ 
+  /* Vendor name cell */
+  .vendor-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text);
+  }
+  .vendor-since {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+ 
+  /* Category pill */
+  .category-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+  }
+ 
+  /* GST number */
+  .gst-num {
+    font-size: 0.78rem;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+ 
+  /* Contact */
+  .contact-num { font-size: 0.8rem; }
+ 
+  /* Status badge */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+  .status-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .status-badge.active {
+    background: rgba(16,185,129,0.12);
+    color: var(--status-active);
+    border: 1px solid rgba(16,185,129,0.3);
+  }
+  .status-badge.active::before { background: var(--status-active); }
+  .status-badge.pending {
+    background: rgba(245,158,11,0.12);
+    color: var(--status-pending);
+    border: 1px solid rgba(245,158,11,0.3);
+  }
+  .status-badge.pending::before { background: var(--status-pending); }
+  .status-badge.blocked {
+    background: rgba(239,68,68,0.12);
+    color: var(--status-blocked);
+    border: 1px solid rgba(239,68,68,0.3);
+  }
+  .status-badge.blocked::before { background: var(--status-blocked); }
+ 
+  /* Action button */
+  .btn-view {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-view:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+ 
+  /* ── ADD VENDOR BUTTON ── */
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 20px;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.18s;
+    letter-spacing: 0.2px;
+  }
+  .btn-primary:hover {
+    background: #8a5d7e;
+    box-shadow: 0 0 18px rgba(113,75,103,0.4);
+  }
+ 
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+    font-size: 0.82rem;
+    display: none;
+  }
+  .empty-state .icon { font-size: 2rem; margin-bottom: 10px; }
+ 
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    width: 460px;
+    transform: translateY(16px);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.show .modal { transform: translateY(0); }
+  .modal h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem; font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .modal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .modal-field { display: flex; flex-direction: column; gap: 5px; }
+  .modal-field label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .modal-field input,
+  .modal-field select {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 11px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .modal-field input:focus,
+  .modal-field select:focus { border-color: var(--accent); }
+  .modal-field select option { background: var(--surface2); }
+  .modal-field.full { grid-column: 1 / -1; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
+  .btn-outline {
+    display: inline-flex; align-items: center;
+    padding: 8px 18px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-outline:hover { border-color: var(--muted); background: var(--surface2); }
+ 
+  /* ── VENDOR DETAIL PANEL ── */
+  .detail-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 40;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .detail-overlay.show { opacity: 1; pointer-events: all; }
+  .detail-panel {
+    position: fixed;
+    top: 0; right: -400px; bottom: 0;
+    width: 380px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    z-index: 45;
+    padding: 28px 26px;
+    overflow-y: auto;
+    transition: right 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  .detail-panel.show { right: 0; }
+  .detail-panel::-webkit-scrollbar { width: 4px; }
+  .detail-panel::-webkit-scrollbar-thumb { background: var(--border); }
+  .detail-close {
+    position: absolute; top: 18px; right: 18px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 5px; width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--muted); font-size: 0.9rem;
+    transition: all 0.15s;
+  }
+  .detail-close:hover { color: var(--text); border-color: var(--muted); }
+  .detail-vendor-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem; font-weight: 800;
+    margin-bottom: 4px;
+    padding-right: 32px;
+  }
+  .detail-meta { font-size: 0.75rem; color: var(--muted); margin-bottom: 22px; }
+  .detail-section-title {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 10px;
+    margin-top: 20px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-row {
+    display: flex; justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(34,43,53,0.5);
+    font-size: 0.78rem;
+  }
+  .detail-row .key { color: var(--muted); }
+  .detail-row .val { color: var(--text); font-weight: 500; }
+  .detail-actions {
+    display: flex; gap: 8px; margin-top: 22px;
+  }
+  .detail-actions button {
+    flex: 1; padding: 9px;
+    border-radius: 6px; border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.76rem; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .detail-btn-block {
+    background: rgba(239,68,68,0.1);
+    color: var(--danger);
+    border-color: rgba(239,68,68,0.3) !important;
+  }
+  .detail-btn-block:hover { background: rgba(239,68,68,0.2); }
+  .detail-btn-rfq {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-color: var(--accent) !important;
+  }
+  .detail-btn-rfq:hover { background: rgba(113,75,103,0.25); }
+ 
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 12px 18px; border-radius: 7px;
+    font-size: 0.8rem; color: var(--text);
+    opacity: 0; transform: translateY(10px);
+    pointer-events: none; transition: all 0.25s; z-index: 99;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+ 
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 4px; }
+</style>
+</head>
+<body>
+ 
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Vendor<span>Bridge</span></div>
+  <nav>
+    <a href="screen3dashboard.html" class="active">Dashboard</a>
+    <a href="screen4vendors.html">Vendors</a>
+    <a href="screen5rfq.html">RFQ's</a>
+    <a href="screen6quotation1.html">Quotations</a>
+    <a href="screen8approvalworkflow.html">Approvals</a>
+    <a href="screen9invoices.html">Invoices</a>
+    <a href="screen10reports.html" >Reports</a>
+    <a href="screen11activity.html">Activity</a>
+  </nav>
+</aside>
+ 
+<!-- MAIN -->
+<div class="main">
+ 
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <input class="topbar-search" type="text" placeholder="Search…">
+    <div class="topbar-right">
+      <div class="avatar" style="background:#714b67;color:#fff;">I</div>
+      <div class="avatar" style="background:#f97316;color:#fff;">P</div>
+    </div>
+  </div>
+ 
+  <!-- CONTENT -->
+  <div class="content">
+ 
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Vendors</h1>
+        <p class="subtitle">Manage supplier profiles and registrations</p>
+      </div>
+      <button class="btn-primary" onclick="openAddModal()">+ Add Vendor</button>
+    </div>
+ 
+    <!-- SEARCH -->
+    <div class="vendor-search-wrap">
+      <input
+        class="vendor-search"
+        type="text"
+        id="vendor-search"
+        placeholder="Search bar …… search by name, gst number, category…"
+        oninput="filterVendors()"
+      >
+    </div>
+ 
+    <!-- FILTER TABS -->
+    <div class="filter-tabs" id="filter-tabs">
+      <button class="filter-tab active" data-filter="all" onclick="setFilter(this,'all')">
+        All <span class="count" id="count-all">28</span>
+      </button>
+      <button class="filter-tab" data-filter="active" onclick="setFilter(this,'active')">
+        Active <span class="count" id="count-active">21</span>
+      </button>
+      <button class="filter-tab" data-filter="pending" onclick="setFilter(this,'pending')">
+        Pending <span class="count" id="count-pending">4</span>
+      </button>
+      <button class="filter-tab" data-filter="blocked" onclick="setFilter(this,'blocked')">
+        Blocked <span class="count" id="count-blocked">3</span>
+      </button>
+    </div>
+ 
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table id="vendors-table">
+        <thead>
+          <tr>
+            <th>Vendor Name</th>
+            <th>Category</th>
+            <th>GST No.</th>
+            <th>Contact No.</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="vendors-tbody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+      <div class="empty-state" id="empty-state">
+        <div class="icon">🔍</div>
+        No vendors found matching your search.
+      </div>
+    </div>
+ 
+  </div><!-- /content -->
+</div><!-- /main -->
+ 
+<!-- ADD VENDOR MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <h2>Add New Vendor</h2>
+    <div class="modal-grid">
+      <div class="modal-field full">
+        <label>Vendor Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="new-name" placeholder="e.g. Infra Supplies Pvt Ltd">
+      </div>
+      <div class="modal-field">
+        <label>Category <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="new-category" placeholder="e.g. IT, Furniture…">
+      </div>
+      <div class="modal-field">
+        <label>GST Number</label>
+        <input type="text" id="new-gst" placeholder="27AABCS1234B1Z5">
+      </div>
+      <div class="modal-field">
+        <label>Contact Number</label>
+        <input type="text" id="new-contact" placeholder="XYZ Number">
+      </div>
+      <div class="modal-field">
+        <label>Status</label>
+        <select id="new-status">
+          <option value="pending">Pending</option>
+          <option value="active">Active</option>
+          <option value="blocked">Blocked</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-primary" onclick="addVendor()">Add Vendor</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- VENDOR DETAIL SIDE PANEL -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="detail-close" onclick="closeDetail()">✕</div>
+  <div class="detail-vendor-name" id="dp-name"></div>
+  <div class="detail-meta" id="dp-meta"></div>
+ 
+  <div class="detail-section-title">Company Details</div>
+  <div class="detail-row"><span class="key">Category</span><span class="val" id="dp-category"></span></div>
+  <div class="detail-row"><span class="key">GST Number</span><span class="val" id="dp-gst"></span></div>
+  <div class="detail-row"><span class="key">Contact</span><span class="val" id="dp-contact"></span></div>
+  <div class="detail-row"><span class="key">Status</span><span class="val" id="dp-status-val"></span></div>
+ 
+  <div class="detail-section-title">Activity</div>
+  <div class="detail-row"><span class="key">Active RFQs</span><span class="val" id="dp-rfqs"></span></div>
+  <div class="detail-row"><span class="key">Quotations</span><span class="val" id="dp-quotes"></span></div>
+  <div class="detail-row"><span class="key">POs Raised</span><span class="val" id="dp-pos"></span></div>
+  <div class="detail-row"><span class="key">Avg. Rating</span><span class="val" id="dp-rating"></span></div>
+ 
+  <div class="detail-actions">
+    <button class="detail-btn-rfq" onclick="sendRFQ()">+ Send RFQ</button>
+    <button class="detail-btn-block" id="dp-block-btn" onclick="toggleBlock()">Block</button>
+  </div>
+</div>
+ 
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+ 
+<script>
+  /* ── DATA ── */
+  const vendors = [
+    { id:1,  name:'Infra Supplies Pvt Ltd',  category:'Constructions',  gst:'27AABCSM29B0',  contact:'XYZ Number',  status:'active',  since:'Jan 2023', rfqs:3,  quotes:5,  pos:2,  rating:'4.5/5' },
+    { id:2,  name:'Tech Core LTD',           category:'IT',             gst:'27AABCSM29B0',  contact:'XYZ Number',  status:'active',  since:'Mar 2022', rfqs:1,  quotes:3,  pos:4,  rating:'4.0/5' },
+    { id:3,  name:'Fastlog Transport',        category:'Logistics',      gst:'27AABCSM29B0',  contact:'XYZ Number',  status:'blocked', since:'Nov 2021', rfqs:0,  quotes:1,  pos:1,  rating:'2.8/5' },
+    { id:4,  name:'Office Need Co.',          category:'Furniture',      gst:'27AAACM2293R1Z', contact:'98XXXXXX12',  status:'active',  since:'Feb 2024', rfqs:2,  quotes:4,  pos:1,  rating:'3.2/5' },
+    { id:5,  name:'BrightPrint Media',        category:'Marketing',      gst:'27AAABP1234C1Z', contact:'91XXXXXX44',  status:'pending', since:'Apr 2025', rfqs:0,  quotes:0,  pos:0,  rating:'—'      },
+    { id:6,  name:'CloudNine Solutions',      category:'IT',             gst:'27AACCS4567E1Z', contact:'80XXXXXX33',  status:'active',  since:'Jun 2022', rfqs:4,  quotes:7,  pos:5,  rating:'4.8/5' },
+    { id:7,  name:'SwiftPack Logistics',      category:'Logistics',      gst:'27AADSP8901F1Z', contact:'77XXXXXX21',  status:'active',  since:'Sep 2021', rfqs:2,  quotes:3,  pos:3,  rating:'3.9/5' },
+    { id:8,  name:'GreenLeaf Supplies',       category:'Stationery',     gst:'27AAEGL2345G1Z', contact:'70XXXXXX55',  status:'pending', since:'Jan 2025', rfqs:0,  quotes:1,  pos:0,  rating:'—'      },
+    { id:9,  name:'Apex Hardware Co.',        category:'Hardware',       gst:'27AAFAH6789H1Z', contact:'99XXXXXX77',  status:'active',  since:'Dec 2020', rfqs:5,  quotes:9,  pos:7,  rating:'4.6/5' },
+    { id:10, name:'Zenith Electricals',       category:'Electrical',     gst:'27AAGZE0123I1Z', contact:'88XXXXXX66',  status:'active',  since:'Aug 2022', rfqs:3,  quotes:4,  pos:2,  rating:'4.2/5' },
+    { id:11, name:'PrimeSoft Technologies',   category:'IT',             gst:'27AAHPS4567J1Z', contact:'76XXXXXX88',  status:'blocked', since:'May 2021', rfqs:0,  quotes:2,  pos:1,  rating:'2.1/5' },
+    { id:12, name:'MetroFurn Industries',     category:'Furniture',      gst:'27AAIMF8901K1Z', contact:'65XXXXXX44',  status:'pending', since:'Mar 2025', rfqs:0,  quotes:0,  pos:0,  rating:'—'      },
+    { id:13, name:'SafeGuard Security',       category:'Security',       gst:'27AAJSG2345L1Z', contact:'94XXXXXX22',  status:'active',  since:'Oct 2023', rfqs:1,  quotes:2,  pos:1,  rating:'4.4/5' },
+    { id:14, name:'ByteWave Systems',         category:'IT',             gst:'27AAKBW6789M1Z', contact:'83XXXXXX11',  status:'active',  since:'Jul 2022', rfqs:2,  quotes:5,  pos:3,  rating:'4.1/5' },
+    { id:15, name:'AquaTech Services',        category:'Plumbing',       gst:'27AALAT0123N1Z', contact:'72XXXXXX99',  status:'blocked', since:'Feb 2020', rfqs:0,  quotes:1,  pos:0,  rating:'1.9/5' },
+  ];
+ 
+  let currentFilter = 'all';
+  let searchQuery   = '';
+  let selectedId    = null;
+ 
+  /* ── RENDER ── */
+  function renderTable() {
+    const tbody = document.getElementById('vendors-tbody');
+    const filtered = vendors.filter(v => {
+      const matchFilter = currentFilter === 'all' || v.status === currentFilter;
+      const q = searchQuery.toLowerCase();
+      const matchSearch = !q ||
+        v.name.toLowerCase().includes(q) ||
+        v.category.toLowerCase().includes(q) ||
+        v.gst.toLowerCase().includes(q) ||
+        v.contact.toLowerCase().includes(q);
+      return matchFilter && matchSearch;
+    });
+ 
+    tbody.innerHTML = '';
+    document.getElementById('empty-state').style.display = filtered.length ? 'none' : 'block';
+ 
+    filtered.forEach(v => {
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-id', v.id);
+      tr.onclick = () => openDetail(v.id);
+      tr.innerHTML = `
+        <td>
+          <div class="vendor-name">${v.name}</div>
+          <div class="vendor-since">Since ${v.since}</div>
+        </td>
+        <td><span class="category-pill">${v.category}</span></td>
+        <td><span class="gst-num">${v.gst}</span></td>
+        <td><span class="contact-num">${v.contact}</span></td>
+        <td><span class="status-badge ${v.status}">${cap(v.status)}</span></td>
+        <td>
+          <button class="btn-view" onclick="event.stopPropagation();openDetail(${v.id})">View</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+ 
+    updateCounts();
+  }
+ 
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+ 
+  function updateCounts() {
+    document.getElementById('count-all').textContent     = vendors.length;
+    document.getElementById('count-active').textContent  = vendors.filter(v=>v.status==='active').length;
+    document.getElementById('count-pending').textContent = vendors.filter(v=>v.status==='pending').length;
+    document.getElementById('count-blocked').textContent = vendors.filter(v=>v.status==='blocked').length;
+  }
+ 
+  /* ── FILTER ── */
+  function setFilter(btn, filter) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable();
+  }
+ 
+  function filterVendors() {
+    searchQuery = document.getElementById('vendor-search').value;
+    renderTable();
+  }
+ 
+  /* ── ADD VENDOR ── */
+  function openAddModal() {
+    document.getElementById('add-modal').classList.add('show');
+  }
+  function closeAddModal() {
+    document.getElementById('add-modal').classList.remove('show');
+    ['new-name','new-category','new-gst','new-contact'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('new-status').value = 'pending';
+  }
+  function addVendor() {
+    const name = document.getElementById('new-name').value.trim();
+    const category = document.getElementById('new-category').value.trim();
+    if (!name || !category) { showToast('Vendor name and category are required.'); return; }
+    const gst     = document.getElementById('new-gst').value.trim()     || '—';
+    const contact = document.getElementById('new-contact').value.trim() || '—';
+    const status  = document.getElementById('new-status').value;
+    const now = new Date();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    vendors.unshift({
+      id: Date.now(), name, category, gst, contact, status,
+      since: `${months[now.getMonth()]} ${now.getFullYear()}`,
+      rfqs:0, quotes:0, pos:0, rating:'—'
+    });
+    closeAddModal();
+    renderTable();
+    showToast(`✓ ${name} added successfully.`);
+  }
+ 
+  /* ── DETAIL PANEL ── */
+  function openDetail(id) {
+    const v = vendors.find(x => x.id === id);
+    if (!v) return;
+    selectedId = id;
+    document.getElementById('dp-name').textContent     = v.name;
+    document.getElementById('dp-meta').textContent     = `${v.category} · Since ${v.since}`;
+    document.getElementById('dp-category').textContent = v.category;
+    document.getElementById('dp-gst').textContent      = v.gst;
+    document.getElementById('dp-contact').textContent  = v.contact;
+    document.getElementById('dp-status-val').innerHTML = `<span class="status-badge ${v.status}">${cap(v.status)}</span>`;
+    document.getElementById('dp-rfqs').textContent     = v.rfqs;
+    document.getElementById('dp-quotes').textContent   = v.quotes;
+    document.getElementById('dp-pos').textContent      = v.pos;
+    document.getElementById('dp-rating').textContent   = v.rating;
+    const blockBtn = document.getElementById('dp-block-btn');
+    blockBtn.textContent = v.status === 'blocked' ? 'Unblock' : 'Block';
+    document.getElementById('detail-panel').classList.add('show');
+    document.getElementById('detail-overlay').classList.add('show');
+  }
+  function closeDetail() {
+    document.getElementById('detail-panel').classList.remove('show');
+    document.getElementById('detail-overlay').classList.remove('show');
+    selectedId = null;
+  }
+  function sendRFQ() {
+    const v = vendors.find(x => x.id === selectedId);
+    if (v) showToast(`RFQ sent to ${v.name}.`);
+  }
+  function toggleBlock() {
+    const v = vendors.find(x => x.id === selectedId);
+    if (!v) return;
+    if (v.status === 'blocked') {
+      v.status = 'active';
+      showToast(`${v.name} unblocked.`);
+    } else {
+      v.status = 'blocked';
+      showToast(`${v.name} blocked.`);
+    }
+    openDetail(selectedId);
+    renderTable();
+  }
+ 
+  /* ── TOAST ── */
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+ 
+  /* Close modal on backdrop */
+  document.getElementById('add-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeAddModal();
+  });
+ 
+  /* Init */
+  renderTable();
+</script>
+</body>
+</html>

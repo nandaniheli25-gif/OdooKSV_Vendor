@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d12;
+      --card: #16161f;
+      --border: rgba(255,255,255,0.08);
+      --accent: #06f45d;
+      --accent2: #c94fd8;
+      --text: #692b83;
+      --muted: #ffffff;
+      --input-bg: #1e1e2a;
+      --glow: rgba(6,244,93,0.18);
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Ambient background blobs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #06f45d, transparent 70%);
+      top: -120px; left: -120px;
+    }
+    body::after {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, #c94fd8, transparent 70%);
+      bottom: -100px; right: -100px;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 420px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px 40px 44px;
+      box-shadow: 0 0 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+      animation: slideUp 0.7s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(36px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Avatar */
+    .avatar-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 32px;
+      animation: slideUp 0.7s 0.1s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .avatar {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      background: var(--input-bg);
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .avatar:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 24px var(--glow);
+    }
+    .avatar svg {
+      width: 38px; height: 38px;
+      opacity: 0.35;
+      transition: opacity 0.3s;
+    }
+    .avatar:hover svg { opacity: 0.6; }
+    .avatar img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: none;
+      border-radius: 50%;
+    }
+    .avatar-hint {
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .avatar-wrap:hover .avatar-hint { opacity: 1; }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      color: var(--text);
+      text-align: center;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+      animation: slideUp 0.7s 0.15s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 36px;
+      animation: slideUp 0.7s 0.2s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    .field {
+      margin-bottom: 16px;
+      animation: slideUp 0.7s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .field:nth-child(1) { animation-delay: 0.25s; }
+    .field:nth-child(2) { animation-delay: 0.3s; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+    .input-wrap svg {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      opacity: 0.4;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    input {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 14px 14px 42px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    input::placeholder { color: var(--muted); }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+    input:focus + svg, .input-wrap:focus-within svg { opacity: 0.9; }
+
+    .password-toggle {
+      position: absolute;
+      right: 14px;
+      top: 50%; transform: translateY(-50%);
+      background: none; border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: var(--muted);
+      display: flex; align-items: center;
+      transition: color 0.2s;
+    }
+    .password-toggle:hover { color: var(--text); }
+
+    .forgot {
+      display: block;
+      text-align: right;
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      margin-top: -8px;
+      margin-bottom: 28px;
+      transition: color 0.2s;
+      animation: slideUp 0.7s 0.35s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .forgot:hover { color: var(--accent); }
+
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), #04c44a);
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.25s;
+      animation: slideUp 0.7s 0.4s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .btn-login::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.12);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(6,244,93,0.38); }
+    .btn-login:hover::after { opacity: 1; }
+    .btn-login:active { transform: translateY(0); }
+
+    .btn-login .spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 24px 0;
+      animation: slideUp 0.7s 0.45s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .divider span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .divider::before, .divider::after {
+      content: ''; flex: 1;
+      height: 1px; background: var(--border);
+    }
+
+    .signup-link {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      animation: slideUp 0.7s 0.5s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .signup-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    .signup-link a:hover { opacity: 0.8; }
+
+    /* Error message */
+    .error-msg {
+      display: none;
+      background: rgba(6,244,93,0.12);
+      border: 1px solid rgba(6,244,93,0.3);
+      border-radius: 10px;
+      color: #06f45d;
+      font-size: 13px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    /* File input hidden */
+    #photo-input { display: none; }
+
+    /* Input password toggle icon alignment */
+    .pw-wrap input { padding-right: 44px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="avatar-wrap">
+    <div style="position:relative; display:inline-block;">
+      <div class="avatar" id="avatarCircle" onclick="document.getElementById('photo-input').click()" title="Upload photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" color="#f0ede8">
+          <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+        <img id="avatarImg" alt="Profile photo"/>
+      </div>
+      <span class="avatar-hint">Click to upload</span>
+    </div>
+    <input type="file" id="photo-input" accept="image/*" onchange="loadPhoto(event)"/>
+  </div>
+
+  <h1>Welcome Back</h1>
+  <p class="subtitle">Sign in to your account</p>
+
+  <div class="error-msg" id="errorMsg">Invalid username or password.</div>
+
+  <div class="field">
+    <label for="username">Username</label>
+    <div class="input-wrap">
+      <input type="text" id="username" placeholder="Enter your username" autocomplete="username"/>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" color="#f0ede8">
+        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="password">Password</label>
+    <div class="input-wrap pw-wrap">
+      <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password"/>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" color="#f0ede8" style="left:14px;">
+        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <button class="password-toggle" type="button" onclick="togglePassword()" id="toggleBtn" aria-label="Toggle password">
+        <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <a href="#" class="forgot">Forgot password?</a>
+
+  <button class="btn-login" id="loginBtn" onclick="handleLogin()">
+    <span id="btnText">Login</span>
+    <div class="spinner" id="spinner"></div>
+  </button>
+
+  <div class="divider"><span>or</span></div>
+
+  <p class="signup-link">Don't have an account? <a href="screen2createyouraccount.html">Sign up</a></p>
+</div>
+
+<script>
+  function loadPhoto(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const img = document.getElementById('avatarImg');
+      img.src = ev.target.result;
+      img.style.display = 'block';
+      document.querySelector('#avatarCircle svg').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function togglePassword() {
+    const pw = document.getElementById('password');
+    const icon = document.getElementById('eyeIcon');
+    if (pw.type === 'password') {
+      pw.type = 'text';
+      icon.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+    } else {
+      pw.type = 'password';
+      icon.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+    }
+  }
+
+  function handleLogin() {
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value.trim();
+    const err = document.getElementById('errorMsg');
+    const btn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('btnText');
+    const spinner = document.getElementById('spinner');
+
+    err.style.display = 'none';
+
+    if (!u || !p) {
+      err.textContent = 'Please fill in all fields.';
+      err.style.display = 'block';
+      shake(btn);
+      return;
+    }
+
+    // Show loading
+    btnText.style.display = 'none';
+    spinner.style.display = 'block';
+    btn.disabled = true;
+
+    setTimeout(() => {
+      btnText.style.display = 'block';
+      spinner.style.display = 'none';
+      btn.disabled = false;
+      // Demo: always show success alert
+      alert(`Welcome, ${u}! Login successful.`);
+    }, 1500);
+    window.location.href = "screen3dashboard.html";
+  }
+
+  function shake(el) {
+    el.style.animation = 'none';
+    el.offsetHeight; // reflow
+    el.style.animation = 'shake 0.4s ease';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleLogin();
+  });
+</script>
+
+<style>
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
+</style>
+
+</body>
+</html>

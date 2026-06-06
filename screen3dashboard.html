@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendorBridge – Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --surface: #12161a;
+    --surface2: #1c2229;
+    --input-bg: #080a0c;
+    --border: #222b35;
+    --accent: #714b67;
+    --accent2: #017e84;
+    --accent-dim: rgba(113, 75, 103, 0.15);
+    --text: #f1f5f9;
+    --muted: #64748b;
+    --nav-active: #1e2631;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --step-done: #10b981;
+  }
+ 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+ 
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px; min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.15rem;
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo span { color: var(--accent); }
+  nav { padding: 14px 0; flex: 1; }
+  nav a {
+    display: block; padding: 10px 20px;
+    font-size: 0.82rem; color: var(--muted);
+    text-decoration: none; letter-spacing: 0.3px;
+    transition: color 0.15s, background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  nav a:hover { color: var(--text); background: var(--surface2); }
+  nav a.active {
+    color: var(--accent);
+    background: rgba(113,75,103,0.10);
+    border-left: 3px solid var(--accent);
+    font-weight: 500;
+  }
+  nav a::before { content: '– '; }
+ 
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+ 
+  .topbar {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .topbar-search {
+    flex: 1; max-width: 320px;
+    background: var(--input-bg);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 12px; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  .topbar-search:focus { border-color: var(--accent); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700;
+  }
+ 
+  /* ── CONTENT ── */
+  .content { flex: 1; overflow-y: auto; padding: 28px 32px; }
+  .content::-webkit-scrollbar { width: 5px; }
+  .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+ 
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.55rem; font-weight: 800;
+    letter-spacing: -0.5px; margin-bottom: 2px;
+  }
+  .subtitle { font-size: 0.78rem; color: var(--muted); margin-bottom: 26px; }
+ 
+  /* ── STAT CARDS ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 6px;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--accent); }
+  .stat-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem; font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--text);
+  }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.warning { color: var(--warning); }
+  .stat-value.danger { color: var(--danger); }
+ 
+  /* ── TWO-COL LAYOUT ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+ 
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.88rem; font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+  .panel-link {
+    font-size: 0.72rem; color: var(--accent);
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .panel-link:hover { opacity: 0.75; }
+ 
+  /* ── PO TABLE ── */
+  .po-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .po-table thead th {
+    background: var(--surface2);
+    padding: 9px 16px;
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+  }
+  .po-table tbody tr { border-top: 1px solid var(--border); transition: background 0.15s; }
+  .po-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+  .po-table tbody td { padding: 11px 16px; color: var(--text); }
+ 
+  /* ── STATUS PILLS ── */
+  .pill {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 20px; font-size: 0.68rem;
+    font-weight: 500; letter-spacing: 0.3px;
+  }
+  .pill-approved { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+  .pill-pending  { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+  .pill-draft    { background: rgba(100,116,139,0.12); color: var(--muted); border: 1px solid var(--border); }
+ 
+  /* ── SPENDING CHART ── */
+  .chart-body { padding: 18px 20px; }
+  .chart-label { font-size: 0.7rem; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+ 
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-month { font-size: 0.7rem; color: var(--muted); width: 28px; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; background: var(--accent); transition: width 0.6s ease; }
+  .bar-fill.accent2 { background: var(--accent2); }
+  .bar-val { font-size: 0.68rem; color: var(--muted); width: 46px; text-align: right; flex-shrink: 0; }
+ 
+  /* ── ACTION BUTTONS ── */
+  .action-row {
+    display: flex; gap: 12px;
+    margin-top: 24px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 6px;
+    font-family: 'DM Mono', monospace; font-size: 0.8rem;
+    cursor: pointer; border: 1px solid transparent;
+    transition: all 0.18s; font-weight: 500;
+  }
+  .btn-primary {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+  }
+  .btn-primary:hover { opacity: 0.85; box-shadow: 0 0 18px rgba(113,75,103,0.4); }
+  .btn-outline {
+    background: transparent; color: var(--text); border-color: var(--border);
+  }
+  .btn-outline:hover { border-color: var(--muted); background: var(--surface2); }
+  .btn-ghost {
+    background: transparent; color: var(--accent); border-color: transparent;
+    padding: 10px 16px;
+  }
+  .btn-ghost:hover { background: var(--accent-dim); }
+ 
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 12px 18px; border-radius: 7px;
+    font-size: 0.8rem; color: var(--text);
+    opacity: 0; transform: translateY(10px);
+    pointer-events: none; transition: all 0.25s; z-index: 99;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+ 
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 4px; }
+</style>
+</head>
+<body>
+ 
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Vendor<span>Bridge</span></div>
+  <nav>
+    <a href="screen3dashboard.html" class="active">Dashboard</a>
+    <a href="screen4vendors.html">Vendors</a>
+    <a href="screen5rfq.html">RFQ's</a>
+    <a href="screen6quotation1.html">Quotations</a>
+    <a href="screen8approvalworkflow.html">Approvals</a>
+    <a href="screen9invoices.html">Invoices</a>
+    <a href="screen10reports.html" >Reports</a>
+    <a href="screen11activity.html">Activity</a>
+  </nav>
+</aside>
+ 
+<!-- MAIN -->
+<div class="main">
+ 
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <input class="topbar-search" type="text" placeholder="Search…">
+    <div class="topbar-right">
+      <div class="avatar" style="background:#714b67;color:#fff;">I</div>
+      <div class="avatar" style="background:#f97316;color:#fff;">P</div>
+    </div>
+  </div>
+ 
+  <!-- CONTENT -->
+  <div class="content">
+    <h1>Dashboard</h1>
+    <p class="subtitle">Welcome back, Procurement Officer – Today's Overview</p>
+ 
+    <!-- STAT CARDS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-label">Active RFQ's</span>
+        <span class="stat-value accent">12</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Pending Approvals</span>
+        <span class="stat-value warning">5</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">PO's This Month</span>
+        <span class="stat-value">₹ 2.3L</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Overdue Invoices</span>
+        <span class="stat-value danger">3</span>
+      </div>
+    </div>
+ 
+    <!-- TWO-COL: PO Table + Spending Chart -->
+    <div class="two-col">
+ 
+      <!-- RECENT PURCHASE ORDERS -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Recent Purchase Orders</span>
+          <a href="screen9invoices.html" class="panel-link">View all →</a>
+        </div>
+        <table class="po-table">
+          <thead>
+            <tr>
+              <th>PO #</th>
+              <th>Vendor</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--muted)">Po1</td>
+              <td>Infra</td>
+              <td>₹87,000</td>
+              <td><span class="pill pill-approved">Approved</span></td>
+            </tr>
+            <tr>
+              <td style="color:var(--muted)">Po2</td>
+              <td>Tech core</td>
+              <td>₹1,40,000</td>
+              <td><span class="pill pill-pending">Pending</span></td>
+            </tr>
+            <tr>
+              <td style="color:var(--muted)">Po3</td>
+              <td>OfficeNeed Co</td>
+              <td>₹34,900</td>
+              <td><span class="pill pill-draft">Draft</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+ 
+      <!-- SPENDING TREND CHART -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Spending Trends — Last 6 Months</span>
+        </div>
+        <div class="chart-body">
+          <div class="chart-label">Monthly Spend (₹ in thousands)</div>
+ 
+          <div class="bar-row">
+            <span class="bar-month">Jan</span>
+            <div class="bar-track"><div class="bar-fill" style="width:55%"></div></div>
+            <span class="bar-val">₹1.1L</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-month">Feb</span>
+            <div class="bar-track"><div class="bar-fill accent2" style="width:38%"></div></div>
+            <span class="bar-val">₹0.76L</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-month">Mar</span>
+            <div class="bar-track"><div class="bar-fill" style="width:80%"></div></div>
+            <span class="bar-val">₹1.6L</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-month">Apr</span>
+            <div class="bar-track"><div class="bar-fill accent2" style="width:62%"></div></div>
+            <span class="bar-val">₹1.24L</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-month">May</span>
+            <div class="bar-track"><div class="bar-fill" style="width:45%"></div></div>
+            <span class="bar-val">₹0.9L</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-month">Jun</span>
+            <div class="bar-track"><div class="bar-fill accent2" style="width:93%"></div></div>
+            <span class="bar-val">₹2.3L</span>
+          </div>
+        </div>
+      </div>
+ 
+    </div>
+ 
+    <!-- ACTION BUTTONS -->
+    <div class="action-row">
+      <button class="btn btn-primary" onclick="window.location.href='screen5rfq.html'">+ New RFQ</button>
+      <button class="btn btn-outline" onclick="window.location.href='screen4vendors.html'">Add Vendor</button>
+      <button class="btn btn-ghost" onclick="window.location.href='screen9invoices.html'">View Invoices</button>
+    </div>
+ 
+  </div><!-- /content -->
+</div><!-- /main -->
+ 
+<div class="toast" id="toast"></div>
+ 
+<script>
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+</script>
+</body>
+</html>

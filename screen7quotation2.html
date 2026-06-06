@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendorBridge – Quotation Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+  --bg: #0b0d10;          
+  --surface: #12161a;      
+  --surface2: #1c2229;    
+  --input-bg: #080a0c;    
+  --border: #222b35;       
+  --accent: #714b67;       
+  --accent2: #017e84;      
+  --accent-dim: rgba(113, 75, 103, 0.15);
+  --text: #f1f5f9;         
+  --muted: #64748b;      
+  --nav-active: #1e2631;   
+  --danger: #ef4444;      
+  --warning: #f59e0b;      
+  --step-done: #10b981;
+  }
+ 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+ 
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px; min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.15rem;
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo span { color: var(--accent); }
+  nav { padding: 14px 0; flex: 1; }
+  nav a {
+    display: block; padding: 10px 20px;
+    font-size: 0.82rem; color: var(--muted);
+    text-decoration: none; letter-spacing: 0.3px;
+    transition: color 0.15s, background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  nav a:hover { color: var(--text); background: var(--surface2); }
+  nav a.active {
+    color: var(--accent);
+    background: rgba(74,222,128,0.07);
+    border-left: 3px solid var(--accent);
+    font-weight: 500;
+  }
+  nav a::before { content: '– '; }
+ 
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+ 
+  .topbar {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .topbar-search {
+    flex: 1; max-width: 320px;
+    background: var(--input-bg);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 12px; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    outline: none; transition: border-color 0.2s;
+  }
+  .topbar-search:focus { border-color: var(--accent); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700;
+  }
+ 
+  /* ── CONTENT ── */
+  .content { flex: 1; overflow-y: auto; padding: 28px 32px; }
+  .content::-webkit-scrollbar { width: 5px; }
+  .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+ 
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.55rem; font-weight: 800;
+    letter-spacing: -0.5px; margin-bottom: 4px;
+  }
+  .rfq-meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 26px; }
+  .rfq-meta span { color: var(--accent); }
+ 
+  /* ── COMPARISON TABLE ── */
+  .compare-wrap {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+ 
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+ 
+  /* Header row */
+  .compare-table thead tr th {
+    padding: 14px 18px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+ 
+  .compare-table thead th:first-child {
+    text-align: left;
+    color: var(--muted);
+    background: var(--surface2);
+  }
+ 
+  /* Best/lowest column header */
+  .compare-table thead th.best-col {
+    background: rgba(74,222,128,0.15);
+    color: var(--accent);
+    border-left: 2px solid var(--best-border);
+    border-right: 2px solid var(--best-border);
+    position: relative;
+  }
+ 
+  .best-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #0f0f0f;
+    font-size: 0.6rem;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-weight: 700;
+    margin-left: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+  }
+ 
+  /* Body rows */
+  .compare-table tbody tr {
+    border-top: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .compare-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+ 
+  .compare-table tbody td {
+    padding: 13px 18px;
+    text-align: center;
+    color: var(--text);
+    vertical-align: middle;
+  }
+ 
+  .compare-table tbody td:first-child {
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: var(--surface2);
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+  }
+ 
+  /* Best column cells */
+  .compare-table tbody td.best-col {
+    background: rgba(74,222,128,0.07);
+    color: var(--accent);
+    font-weight: 500;
+    border-left: 2px solid rgba(74,222,128,0.3);
+    border-right: 2px solid rgba(74,222,128,0.3);
+  }
+ 
+  /* Action row */
+  .compare-table tfoot tr td {
+    padding: 16px 18px;
+    text-align: center;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+  }
+ 
+  .compare-table tfoot td.best-col {
+    background: rgba(74,222,128,0.10);
+    border-left: 2px solid rgba(74,222,128,0.3);
+    border-right: 2px solid rgba(74,222,128,0.3);
+    border-bottom: 2px solid rgba(74,222,128,0.3);
+    border-radius: 0 0 0 0;
+  }
+ 
+  .compare-table tfoot td:first-child { background: var(--surface2); }
+ 
+  /* Stars */
+  .stars { color: #facc15; font-size: 0.85rem; letter-spacing: 1px; }
+  .stars-val { font-size: 0.78rem; color: var(--muted); margin-left: 4px; }
+ 
+  /* Highlight value */
+  .val-grand { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+  .val-grand.best { color: var(--accent); }
+ 
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 20px; border-radius: 6px;
+    font-family: 'DM Mono', monospace; font-size: 0.8rem;
+    cursor: pointer; border: 1px solid transparent;
+    transition: all 0.18s; font-weight: 500;
+  }
+  .btn-primary {
+    background: var(--accent); color: #0f0f0f; border-color: var(--accent);
+  }
+  .btn-primary:hover {
+    background: #22c55e;
+    box-shadow: 0 0 18px rgba(74,222,128,0.35);
+  }
+  .btn-outline {
+    background: transparent; color: var(--text); border-color: var(--border);
+  }
+  .btn-outline:hover { border-color: var(--muted); background: var(--surface2); }
+ 
+  /* ── FOOTER NOTE ── */
+  .footnote {
+    font-size: 0.73rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 6px;
+    padding-left: 2px;
+  }
+  .footnote .dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 2px;
+    margin-right: 6px;
+    vertical-align: middle;
+    opacity: 0.7;
+  }
+ 
+  /* ── MODAL OVERLAY ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+ 
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    width: 420px;
+    transform: translateY(16px);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.show .modal { transform: translateY(0); }
+ 
+  .modal h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem; font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .modal p { font-size: 0.82rem; color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+ 
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 12px 18px; border-radius: 7px;
+    font-size: 0.8rem; color: var(--text);
+    opacity: 0; transform: translateY(10px);
+    pointer-events: none; transition: all 0.25s; z-index: 99;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+ 
+  @keyframes fadeIn {
+    from { opacity:0; transform:translateY(-4px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 4px; }
+</style>
+</head>
+<body>
+ 
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Vendor<span>Bridge</span></div>
+  <nav>
+    <a href="screen3dashboard.html">Dashboard</a>
+    <a href="screen4vendors.html">Vendors</a>
+    <a href="screen5rfq.html">RFQ's</a>
+    <a href="screen6quotation1.html" class="active">Quotations</a>
+    <a href="screen8approvalworkflow.html">Approvals</a>
+    <a href="screen9invoices.html">Invoices</a>
+    <a href="screen10reports.html" >Reports</a>
+    <a href="screen11activity.html">Activity</a>
+  </nav>
+</aside>
+ 
+<!-- MAIN -->
+<div class="main">
+ 
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <input class="topbar-search" type="text" placeholder="Search…">
+    <div class="topbar-right">
+      <div class="avatar" style="background:#4ade80;color:#0f0f0f;">I</div>
+      <div class="avatar" style="background:#f97316;color:#fff;">P</div>
+    </div>
+  </div>
+ 
+  <!-- CONTENT -->
+  <div class="content">
+    <h1>Quotation Comparison</h1>
+    <p class="rfq-meta">
+      RFQ: <span>office furniture procurement q2</span> –
+      <span id="quote-count">3 quotations received</span>
+    </p>
+ 
+    <!-- COMPARISON TABLE -->
+    <div class="compare-wrap">
+      <table class="compare-table" id="compare-table">
+        <thead>
+          <tr>
+            <th>Criteria</th>
+            <th class="best-col">
+              Infra Supplies
+              <span class="best-badge">LOWEST</span>
+            </th>
+            <th>TechCore LTD</th>
+            <th>Office Need Co.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Grand Total</td>
+            <td class="best-col"><span class="val-grand best">₹1,85,000</span></td>
+            <td><span class="val-grand">₹2,00,010</span></td>
+            <td><span class="val-grand">₹2,14,800</span></td>
+          </tr>
+          <tr>
+            <td>GST %</td>
+            <td class="best-col">18%</td>
+            <td>18%</td>
+            <td>18%</td>
+          </tr>
+          <tr>
+            <td>Delivery (days)</td>
+            <td class="best-col">12</td>
+            <td>14</td>
+            <td>7</td>
+          </tr>
+          <tr>
+            <td>Vendor Rating</td>
+            <td class="best-col">
+              <span class="stars">★★★★½</span>
+              <span class="stars-val">4.5/5</span>
+            </td>
+            <td>
+              <span class="stars">★★★★</span>
+              <span class="stars-val">4.0/5</span>
+            </td>
+            <td>
+              <span class="stars">★★★½</span>
+              <span class="stars-val">3.2/5</span>
+            </td>
+          </tr>
+          <tr>
+            <td>Payment Terms</td>
+            <td class="best-col">30 days</td>
+            <td>30 days</td>
+            <td>15 days</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td></td>
+            <td class="best-col">
+              <button class="btn btn-primary" onclick="openModal('Infra Supplies', '₹1,85,000')">
+                ✓ Select &amp; Approve
+              </button>
+            </td>
+            <td>
+              <button class="btn btn-outline" onclick="openModal('TechCore LTD', '₹2,00,010')">
+                Select
+              </button>
+            </td>
+            <td>
+              <button class="btn btn-outline" onclick="openModal('Office Need Co.', '₹2,14,800')">
+                Select
+              </button>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+ 
+    <p class="footnote">
+      <span class="dot"></span>
+      Purple = lowest price. Selecting a vendor initiates the approval workflow.
+    </p>
+  </div>
+ 
+</div><!-- /main -->
+ 
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <h2 id="modal-title">Confirm Vendor Selection</h2>
+    <p id="modal-body">Are you sure you want to select this vendor? This will initiate the approval workflow.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmSelect()">Confirm & Proceed</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+ 
+<script>
+  let pendingVendor = '';
+  let pendingAmount = '';
+ 
+  /* ── MODAL ── */
+  function openModal(vendor, amount) {
+    pendingVendor = vendor;
+    pendingAmount = amount;
+    document.getElementById('modal-title').textContent = `Select ${vendor}?`;
+    document.getElementById('modal-body').textContent =
+      `You are about to select ${vendor} with a grand total of ${amount}. This will initiate the approval workflow. Do you want to continue?`;
+    document.getElementById('modal-overlay').classList.add('show');
+  }
+ 
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('show');
+  }
+ 
+  function confirmSelect() {
+    closeModal();
+    showToast(`${pendingVendor}selected! Approval workflow initiated.`);
+    window.location.href = "screen8approvalworkflow.html";
+ 
+    // Visually mark selected vendor
+    const headers = document.querySelectorAll('.compare-table thead th');
+    const footBtns = document.querySelectorAll('.compare-table tfoot td button');
+    headers.forEach((th, i) => {
+      if (i === 0) return;
+      const isSelected = th.textContent.trim().startsWith(pendingVendor.split(' ')[0]);
+      th.style.background = isSelected ? 'rgba(74,222,128,0.2)' : '';
+    });
+    footBtns.forEach(btn => {
+      const txt = btn.textContent.trim();
+      btn.textContent = txt.includes('Select') ? 'Select' : txt;
+    });
+  }
+ 
+  /* ── TOAST ── */
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+ 
+  /* Close modal on backdrop click */
+  document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendorBridge – PO & Invoice</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --bg: #0b0d10;
+  --surface: #12161a;
+  --surface2: #1c2229;
+  --input-bg: #080a0c;
+  --border: #222b35;
+  --accent: #714b67;
+  --accent2: #017e84;
+  --accent-dim: rgba(113,75,103,0.15);
+  --text: #f1f5f9;
+  --muted: #64748b;
+  --nav-active: #1e2631;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --step-done: #10b981;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.5px;
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.logo span { color: var(--accent); }
+
+nav { padding: 14px 0; flex: 1; }
+
+nav a {
+  display: block;
+  padding: 10px 20px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 0.3px;
+  transition: color 0.15s, background 0.15s;
+  border-left: 3px solid transparent;
+}
+
+nav a:hover { color: var(--text); background: var(--surface2); }
+
+nav a.active {
+  color: var(--accent);
+  background: rgba(113,75,103,0.1);
+  border-left: 3px solid var(--accent);
+  font-weight: 500;
+}
+
+nav a::before { content: '– '; }
+
+/* ── MAIN ── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.topbar-search {
+  flex: 1;
+  max-width: 320px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 12px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.topbar-search:focus { border-color: var(--accent); }
+
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+
+.badge {
+  background: var(--nav-active);
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-family: 'Syne', sans-serif;
+}
+
+.avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; color: #0f0f0f;
+}
+
+/* ── CONTENT ── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px;
+}
+
+.content::-webkit-scrollbar { width: 5px; }
+.content::-webkit-scrollbar-track { background: transparent; }
+.content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 3px;
+}
+
+.subtitle {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 26px;
+}
+
+/* ── BILL GRID ── */
+.bill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 32px;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+
+/* ── FIELD ── */
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+input[type="text"],
+input[type="date"],
+textarea,
+select {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+
+/* ── INFO BOX (bill-to / vendor) ── */
+.info-box {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-box input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  padding: 4px 2px;
+  font-size: 0.8rem;
+}
+
+.info-box input:focus { border-bottom-color: var(--accent); }
+
+.info-box .org {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.info-box .gstin {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+/* ── META ROW ── */
+.meta-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.meta-item { display: flex; flex-direction: column; gap: 5px; }
+
+.meta-item label { font-size: 0.68rem; }
+
+.meta-item .po-val {
+  font-size: 0.82rem;
+  color: var(--accent2);
+  font-family: 'DM Mono', monospace;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+/* ── TABLE ── */
+.table-wrap {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+
+thead th {
+  background: var(--surface2);
+  padding: 8px 12px;
+  text-align: left;
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+thead th.right { text-align: right; }
+
+tbody tr { border-top: 1px solid var(--border); }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+tbody td {
+  padding: 9px 12px;
+  color: var(--text);
+}
+
+tbody td input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  padding: 2px 4px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+tbody td input:focus { border-bottom-color: var(--accent); }
+
+td.right { text-align: right; font-size: 0.82rem; }
+td.mono { font-family: 'DM Mono', monospace; }
+
+.del-btn {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 6px;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.del-btn:hover { opacity: 1; }
+
+/* ── TOTALS ── */
+.totals-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+}
+
+.total-row {
+  display: flex;
+  gap: 32px;
+  justify-content: space-between;
+  width: 240px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.total-row .val { color: var(--text); font-family: 'DM Mono', monospace; }
+
+.total-row.grand {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 4px;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.total-row.grand .val { color: var(--accent); font-size: 1rem; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.18s;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #f1f5f9;
+  border-color: var(--accent);
+}
+
+.btn-primary:hover {
+  background: #8b5e80;
+  box-shadow: 0 0 16px rgba(113,75,103,0.35);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.btn-outline:hover { border-color: var(--muted); background: var(--surface2); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--accent);
+  border-color: transparent;
+  font-size: 0.75rem;
+  padding: 5px 8px;
+}
+
+.btn-ghost:hover { background: var(--accent-dim); }
+
+.btn-paid {
+  background: transparent;
+  border: 1px solid var(--step-done);
+  color: var(--step-done);
+  cursor: default;
+}
+
+/* ── STATUS BADGE ── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.status-badge.pending {
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.3);
+  color: var(--warning);
+}
+
+.status-badge.paid {
+  background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: var(--step-done);
+}
+
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+}
+
+/* ── FOOTER ── */
+.form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  gap: 12px;
+}
+
+.footer-left { display: flex; gap: 10px; align-items: center; }
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  padding: 12px 18px;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  color: var(--text);
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: all 0.25s;
+  z-index: 99;
+}
+
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Vendor<span>Bridge</span></div>
+  <nav>
+    <a href="screen3dashboard.html">Dashboard</a>
+    <a href="screen4vendors.html">Vendors</a>
+    <a href="screen5rfq.html">RFQ's</a>
+    <a href="screen6quotation1.html">Quotations</a>
+    <a href="screen8approvalworkflow.html">Approvals</a>
+    <a href="screen9invoices.html"class="active">Invoices</a>
+    <a href="screen10reports.html" >Reports</a>
+    <a href="screen11activity.html">Activity</a>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <input class="topbar-search" type="text" placeholder="Search…">
+    <div class="topbar-right">
+      <span class="badge">Daring Giraffe</span>
+      <div class="avatar">G</div>
+      <div class="avatar" style="background:#f97316;">P</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+    <h1>Purchase Order &amp; Invoice</h1>
+    <p class="subtitle">PO-2024-auto-generated after approval</p>
+
+    <!-- BILL TO / VENDOR -->
+    <div class="bill-grid">
+      <!-- Bill To -->
+      <div>
+        <div class="section-title">Bill To</div>
+        <div class="info-box">
+          <input class="org" type="text" value="Your Organization Name">
+          <input type="text" value="123 Business Park, Ahmedabad">
+          <input class="gstin" type="text" value="GSTIN: 25383438AFB">
+        </div>
+      </div>
+      <!-- Vendor -->
+      <div>
+        <div class="section-title">Vendor</div>
+        <div class="info-box">
+          <input class="org" type="text" value="Infra Supplies Pvt Ltd">
+          <input type="text" value="456, Industrial Estate, Surat">
+          <input class="gstin" type="text" value="GSTIN: 343434DB9523">
+        </div>
+      </div>
+    </div>
+
+    <!-- META ROW -->
+    <div class="meta-row">
+      <div class="meta-item">
+        <label>PO Number</label>
+        <div class="po-val" contenteditable="true">PO-2025-0068</div>
+      </div>
+      <div class="meta-item">
+        <label>PO Date</label>
+        <input type="date" value="2025-05-21">
+      </div>
+      <div class="meta-item">
+        <label>Invoice Date</label>
+        <input type="date" value="2025-05-22">
+      </div>
+      <div class="meta-item">
+        <label>Due Date</label>
+        <input type="date" value="2025-06-21">
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- LINE ITEMS TABLE -->
+    <div style="margin-top:16px;">
+      <div class="section-title">Line Items</div>
+      <div class="table-wrap">
+        <table id="items-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Unit Price (₹)</th>
+              <th class="right">Total (₹)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="items-body">
+            <tr>
+              <td><input type="text" value="Ergonomic Chair"></td>
+              <td><input type="text" value="25" style="width:60px" oninput="recalc()"></td>
+              <td><input type="text" value="3500" style="width:100px" oninput="recalc()"></td>
+              <td class="right mono row-total">87,500</td>
+              <td><button class="del-btn" onclick="deleteRow(this)">✕</button></td>
+            </tr>
+            <tr>
+              <td><input type="text" value="Tech Core LTD"></td>
+              <td><input type="text" value="10" style="width:60px" oninput="recalc()"></td>
+              <td><input type="text" value="8200" style="width:100px" oninput="recalc()"></td>
+              <td class="right mono row-total">82,000</td>
+              <td><button class="del-btn" onclick="deleteRow(this)">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <button class="btn btn-ghost" onclick="addItem()">+ add line item</button>
+    </div>
+
+    <!-- TOTALS -->
+    <div class="totals-panel">
+      <div class="total-row">
+        <span>Subtotal</span>
+        <span class="val" id="subtotal">₹1,69,500</span>
+      </div>
+      <div class="total-row">
+        <span>CGST (4%)</span>
+        <span class="val" id="cgst">₹6,780</span>
+      </div>
+      <div class="total-row">
+        <span>SGST (4%)</span>
+        <span class="val" id="sgst">₹6,780</span>
+      </div>
+      <div class="total-row grand">
+        <span>Grand Total</span>
+        <span class="val" id="grand">₹1,83,060</span>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- FOOTER -->
+  <div class="form-footer">
+    <div class="footer-left">
+      <span class="status-badge pending" id="status-badge">
+        <span class="dot"></span> Pending Payment
+      </span>
+      <button class="btn btn-primary" id="mark-paid-btn" onclick="markPaid()">Mark as Paid</button>
+      <button class="btn btn-outline" onclick="downloadPDF()">Download PDF</button>
+      <button class="btn btn-outline" onclick="printInvoice()">Print</button>
+      <button class="btn btn-outline" onclick="emailInvoice()">Email Invoice</button>
+    </div>
+    <span style="font-size:0.72rem;color:var(--muted);">PO-2025-0068 · Screen 9</span>
+  </div>
+
+</div><!-- /main -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ── RECALC ── */
+  function recalc() {
+    const rows = document.querySelectorAll('#items-body tr');
+    let sub = 0;
+    rows.forEach(row => {
+      const inputs = row.querySelectorAll('input[type="text"]');
+      const qty   = parseFloat(inputs[1]?.value.replace(/,/g,'')) || 0;
+      const price = parseFloat(inputs[2]?.value.replace(/,/g,'')) || 0;
+      const total = qty * price;
+      sub += total;
+      const td = row.querySelector('.row-total');
+      if (td) td.textContent = total.toLocaleString('en-IN');
+    });
+    const cgst = Math.round(sub * 0.04);
+    const sgst = Math.round(sub * 0.04);
+    const grand = sub + cgst + sgst;
+    document.getElementById('subtotal').textContent = '₹' + sub.toLocaleString('en-IN');
+    document.getElementById('cgst').textContent     = '₹' + cgst.toLocaleString('en-IN');
+    document.getElementById('sgst').textContent     = '₹' + sgst.toLocaleString('en-IN');
+    document.getElementById('grand').textContent    = '₹' + grand.toLocaleString('en-IN');
+  }
+
+  /* ── ADD ROW ── */
+  function addItem() {
+    const tbody = document.getElementById('items-body');
+    const tr = document.createElement('tr');
+    tr.style.animation = 'fadeIn 0.2s ease';
+    tr.innerHTML = `
+      <td><input type="text" placeholder="Item name"></td>
+      <td><input type="text" placeholder="0" style="width:60px" oninput="recalc()"></td>
+      <td><input type="text" placeholder="0" style="width:100px" oninput="recalc()"></td>
+      <td class="right mono row-total">0</td>
+      <td><button class="del-btn" onclick="deleteRow(this)">✕</button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('input').focus();
+  }
+
+  /* ── DELETE ROW ── */
+  function deleteRow(btn) {
+    const rows = document.getElementById('items-body').rows;
+    if (rows.length <= 1) { showToast('At least one line item required.'); return; }
+    btn.closest('tr').remove();
+    recalc();
+  }
+
+  /* ── MARK AS PAID ── */
+  function markPaid() {
+    const badge = document.getElementById('status-badge');
+    const btn   = document.getElementById('mark-paid-btn');
+    if (badge.classList.contains('pending')) {
+      badge.classList.replace('pending', 'paid');
+      badge.innerHTML = '<span class="dot"></span> Paid';
+      btn.className = 'btn btn-paid';
+      btn.textContent = 'Paid';
+      showToast('Invoice marked as paid!');
+    }
+  }
+
+  /* ── ACTIONS ── */
+  function downloadPDF()  { showToast('PDF download started…'); }
+  function printInvoice() { window.print(); }
+  function emailInvoice() { showToast('Invoice emailed to vendor!'); }
+
+  /* ── TOAST ── */
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  recalc();
+</script>
+</body>
+</html>

@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendorBridge – RFQ's</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  
+:root {
+  --bg: #0b0d10;          
+  --surface: #12161a;      
+  --surface2: #1c2229;    
+  --input-bg: #080a0c;    
+  --border: #222b35;       
+  --accent: #714b67;       
+  --accent2: #017e84;      
+  --accent-dim: rgba(113, 75, 103, 0.15);
+  --text: #f1f5f9;         
+  --muted: #64748b;      
+  --nav-active: #1e2631;   
+  --danger: #ef4444;      
+  --warning: #f59e0b;      
+  --step-done: #10b981;    
+}
+  
+ 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+ 
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+ 
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.15rem;
+    letter-spacing: -0.5px;
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+ 
+  .logo span { color: var(--accent); }
+ 
+  nav { padding: 14px 0; flex: 1; }
+ 
+  nav a {
+    display: block;
+    padding: 10px 20px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    transition: color 0.15s, background 0.15s;
+    border-left: 3px solid transparent;
+  }
+ 
+  nav a:hover { color: var(--text); background: var(--surface2); }
+ 
+  nav a.active {
+    color: var(--accent);
+    background: rgba(74,222,128,0.07);
+    border-left: 3px solid var(--accent);
+    font-weight: 500;
+  }
+ 
+  nav a::before { content: '– '; }
+ 
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+ 
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+ 
+  .topbar-search {
+    flex: 1;
+    max-width: 320px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+ 
+  .topbar-search:focus { border-color: var(--accent); }
+ 
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+ 
+  .badge {
+    background: var(--nav-active);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-family: 'Syne', sans-serif;
+  }
+ 
+  .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700; color: #0f0f0f;
+  }
+ 
+  /* ── CONTENT ── */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px;
+  }
+ 
+  .content::-webkit-scrollbar { width: 5px; }
+  .content::-webkit-scrollbar-track { background: transparent; }
+  .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+ 
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 3px;
+  }
+ 
+  .subtitle {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 26px;
+  }
+ 
+  /* ── STEPPER ── */
+  .stepper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 28px;
+    gap: 0;
+  }
+ 
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+ 
+  .step-circle {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    border: 2px solid var(--border);
+    color: var(--muted);
+    background: var(--surface2);
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+ 
+  .step-circle.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0f0f0f;
+    box-shadow: 0 0 14px rgba(74,222,128,0.35);
+  }
+ 
+  .step-circle.done {
+    background: transparent;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+ 
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--step-line);
+    min-width: 80px;
+    max-width: 200px;
+    transition: background 0.3s;
+  }
+ 
+  .step-line.done { background: var(--accent); }
+ 
+  /* ── FORM GRID ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px 32px;
+    margin-bottom: 20px;
+  }
+ 
+  .field { display: flex; flex-direction: column; gap: 6px; }
+ 
+  label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+ 
+  label .req { color: var(--danger); }
+ 
+  input[type="text"],
+  input[type="date"],
+  textarea,
+  select {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+ 
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+ 
+  textarea { resize: vertical; min-height: 80px; }
+ 
+  /* ── LINE ITEMS TABLE ── */
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+ 
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+ 
+  thead th {
+    background: var(--surface2);
+    padding: 8px 12px;
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+ 
+  tbody tr { border-top: 1px solid var(--border); }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+ 
+  tbody td {
+    padding: 9px 12px;
+    color: var(--text);
+  }
+ 
+  tbody td input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid transparent;
+    padding: 2px 4px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+ 
+  tbody td input:focus { border-bottom-color: var(--accent); }
+ 
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 2px 6px;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+  }
+ 
+  .del-btn:hover { opacity: 1; }
+ 
+  /* ── VENDOR TAGS ── */
+  .vendor-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    min-height: 70px;
+  }
+ 
+  .vendor-tag {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 0.78rem;
+    animation: fadeIn 0.2s ease;
+  }
+ 
+  .vendor-tag button {
+    background: none; border: none;
+    color: var(--danger); cursor: pointer;
+    font-size: 0.9rem; line-height: 1; padding: 0 2px;
+    opacity: 0.7; transition: opacity 0.15s;
+  }
+ 
+  .vendor-tag button:hover { opacity: 1; }
+ 
+  .add-vendor-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+  }
+ 
+  .add-vendor-row input {
+    flex: 1;
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: 5px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    outline: none;
+  }
+ 
+  .add-vendor-row input:focus { border-color: var(--accent); }
+ 
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 18px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.18s;
+    font-weight: 500;
+  }
+ 
+  .btn-primary {
+    background: var(--accent);
+    color: #0f0f0f;
+    border-color: var(--accent);
+  }
+ 
+  .btn-primary:hover {
+    background: #22c55e;
+    box-shadow: 0 0 16px rgba(74,222,128,0.3);
+  }
+ 
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--border);
+  }
+ 
+  .btn-outline:hover { border-color: var(--muted); background: var(--surface2); }
+ 
+  .btn-ghost {
+    background: transparent;
+    color: var(--accent);
+    border-color: transparent;
+    font-size: 0.75rem;
+    padding: 5px 8px;
+  }
+ 
+  .btn-ghost:hover { background: rgba(74,222,128,0.07); }
+ 
+  /* ── ATTACHMENTS ── */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 7px;
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--input-bg);
+  }
+ 
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(74,222,128,0.04);
+    color: var(--text);
+  }
+ 
+  .drop-zone input { display: none; }
+ 
+  .drop-zone .icon { font-size: 1.5rem; margin-bottom: 6px; display: block; }
+ 
+  .file-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+ 
+  .file-chip {
+    display: flex; align-items: center; gap: 5px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 0.74rem;
+    color: var(--text);
+    animation: fadeIn 0.2s ease;
+  }
+ 
+  .file-chip button {
+    background: none; border: none;
+    color: var(--muted); cursor: pointer;
+    padding: 0; font-size: 0.85rem;
+  }
+ 
+  .file-chip button:hover { color: var(--danger); }
+ 
+  /* ── FOOTER ACTIONS ── */
+  .form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    gap: 12px;
+  }
+ 
+  .footer-left { display: flex; gap: 10px; }
+ 
+  /* ── RIGHT PANEL ── */
+  .right-section {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+ 
+  .section-title {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 8px;
+  }
+ 
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 12px 18px;
+    border-radius: 7px;
+    font-size: 0.8rem;
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: all 0.25s;
+    z-index: 99;
+  }
+ 
+  .toast.show { opacity: 1; transform: translateY(0); }
+ 
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+ 
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+  }
+ 
+  /* scrollbar for main */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 4px; }
+</style>
+</head>
+<body>
+ 
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Vendor<span>Bridge</span></div>
+  <nav>
+    <a href="screen3dashboard.html">Dashboard</a>
+    <a href="screen4vendors.html">Vendors</a>
+    <a href="screen5rfq.html">RFQ's</a>
+    <a href="screen6quotation1.html"class="active">Quotations</a>
+    <a href="screen8approvalworkflow.html">Approvals</a>
+    <a href="screen9invoices.html">Invoices</a>
+    <a href="screen10reports.html" >Reports</a>
+    <a href="screen11activity.html">Activity</a>
+  </nav>
+</aside>
+ 
+<!-- MAIN -->
+<div class="main">
+ 
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <input class="topbar-search" type="text" placeholder="Search…">
+    <div class="topbar-right">
+      <span class="badge">Green Crocodile</span>
+      <div class="avatar">I</div>
+      <div class="avatar" style="background:#f97316;">P</div>
+    </div>
+  </div>
+ 
+  <!-- CONTENT -->
+  <div class="content">
+    <h1>Create RFQ's</h1>
+    <p class="subtitle">new request for quotation</p>
+ 
+    <!-- STEPPER -->
+    <div class="stepper">
+      <div class="step">
+        <div class="step-circle active" data-step="1">1</div>
+      </div>
+      <div class="step-line" id="line1"></div>
+      <div class="step">
+        <div class="step-circle" data-step="2">2</div>
+      </div>
+      <div class="step-line" id="line2"></div>
+      <div class="step">
+        <div class="step-circle" data-step="3">3</div>
+      </div>
+    </div>
+ 
+    <!-- FORM GRID -->
+    <div class="form-grid">
+ 
+      <!-- LEFT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="field">
+          <label>RFQ's title <span class="req">*</span></label>
+          <input type="text" id="rfq-title" value="Office Furniture procurement Q2" placeholder="Enter RFQ title">
+        </div>
+        <div class="field">
+          <label>Category</label>
+          <input type="text" id="rfq-category" value="Furniture" placeholder="e.g. Electronics, Furniture…">
+        </div>
+        <div class="field">
+          <label>Deadline <span class="req">*</span></label>
+          <input type="date" id="rfq-deadline" value="2025-06-15">
+        </div>
+        <div class="field">
+          <label>Description</label>
+          <textarea id="rfq-desc" placeholder="Describe the items needed…">Ergonomic chairs and standing desks for 3rd floor</textarea>
+        </div>
+      </div>
+ 
+      <!-- RIGHT COLUMN -->
+      <div class="right-section">
+ 
+        <!-- LINE ITEMS -->
+        <div>
+          <div class="section-title">Line Items</div>
+          <div class="table-wrap">
+            <table id="line-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Unit</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="line-body">
+                <tr>
+                  <td><input type="text" value="Ergonomic chair"></td>
+                  <td><input type="text" value="25" style="width:60px"></td>
+                  <td><input type="text" value="NOS" style="width:60px"></td>
+                  <td><button class="del-btn" onclick="deleteRow(this)">✕</button></td>
+                </tr>
+                <tr>
+                  <td><input type="text" value="Standing desks"></td>
+                  <td><input type="text" value="10" style="width:60px"></td>
+                  <td><input type="text" value="NOS" style="width:60px"></td>
+                  <td><button class="del-btn" onclick="deleteRow(this)">✕</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button class="btn btn-ghost" onclick="addLineItem()">+ add line item</button>
+        </div>
+ 
+        <!-- ASSIGN VENDORS -->
+        <div>
+          <div class="section-title">Assign Vendors</div>
+          <div class="vendor-list" id="vendor-list">
+            <div class="vendor-tag">
+              <span>Infra Supplies Pvt Ltd</span>
+              <button onclick="removeVendor(this)">✕</button>
+            </div>
+            <div class="vendor-tag">
+              <span>Techcore LTD</span>
+              <button onclick="removeVendor(this)">✕</button>
+            </div>
+          </div>
+          <div class="add-vendor-row">
+            <input type="text" id="vendor-input" placeholder="+ add vendor" onkeydown="if(event.key==='Enter')addVendor()">
+            <button class="btn btn-ghost" onclick="addVendor()" style="padding:5px 12px;">Add</button>
+          </div>
+        </div>
+ 
+      </div>
+    </div>
+ 
+    <div class="divider"></div>
+ 
+    <!-- ATTACHMENTS -->
+    <div style="margin-top:14px;">
+      <div class="section-title">Attachments</div>
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+           ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+        <input type="file" id="file-input" multiple onchange="handleFiles(this.files)">
+        <span class="icon">📎</span>
+        Drag & drop files or click to upload
+      </div>
+      <div class="file-list" id="file-list"></div>
+    </div>
+ 
+  </div><!-- /content -->
+ 
+  <!-- FOOTER -->
+  <div class="form-footer">
+    <div class="footer-left">
+      <button class="btn btn-primary" onclick="sendToVendors()">Save & Send to Vendors</button>
+      <button class="btn btn-outline" onclick="saveDraft()">Save as Draft</button>
+    </div>
+    <span style="font-size:0.72rem;color:var(--muted);">Step 1 of 3</span>
+  </div>
+ 
+</div><!-- /main -->
+ 
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+ 
+<script>
+  /* ── STEPPER ── */
+  const stepCircles = document.querySelectorAll('.step-circle');
+  let currentStep = 1;
+ 
+  stepCircles.forEach(s => {
+    s.addEventListener('click', () => {
+      const n = parseInt(s.dataset.step);
+      goToStep(n);
+    });
+  });
+ 
+  function goToStep(n) {
+    currentStep = n;
+    stepCircles.forEach((s, i) => {
+      const step = i + 1;
+      s.classList.remove('active', 'done');
+      if (step < n) s.classList.add('done');
+      else if (step === n) s.classList.add('active');
+    });
+    document.getElementById('line1').classList.toggle('done', n > 1);
+    document.getElementById('line2').classList.toggle('done', n > 2);
+    document.querySelector('.form-footer span').textContent = `Step ${n} of 3`;
+  }
+ 
+  /* ── LINE ITEMS ── */
+  function addLineItem() {
+    const tbody = document.getElementById('line-body');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" placeholder="Item name"></td>
+      <td><input type="text" placeholder="0" style="width:60px"></td>
+      <td><input type="text" placeholder="NOS" style="width:60px"></td>
+      <td><button class="del-btn" onclick="deleteRow(this)">✕</button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('input').focus();
+  }
+ 
+  function deleteRow(btn) {
+    const rows = document.getElementById('line-body').rows;
+    if (rows.length <= 1) { showToast('At least one line item required.'); return; }
+    btn.closest('tr').remove();
+  }
+ 
+  /* ── VENDORS ── */
+  function addVendor() {
+    const input = document.getElementById('vendor-input');
+    const name = input.value.trim();
+    if (!name) return;
+    const list = document.getElementById('vendor-list');
+    const tag = document.createElement('div');
+    tag.className = 'vendor-tag';
+    tag.innerHTML = `<span>${name}</span><button onclick="removeVendor(this)">✕</button>`;
+    list.appendChild(tag);
+    input.value = '';
+    input.focus();
+  }
+ 
+  function removeVendor(btn) {
+    btn.closest('.vendor-tag').remove();
+  }
+ 
+  /* ── ATTACHMENTS ── */
+  function dragOver(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.add('dragover');
+  }
+ 
+  function dragLeave() {
+    document.getElementById('drop-zone').classList.remove('dragover');
+  }
+ 
+  function dropFile(e) {
+    e.preventDefault();
+    dragLeave();
+    handleFiles(e.dataTransfer.files);
+  }
+ 
+  function handleFiles(files) {
+    const list = document.getElementById('file-list');
+    Array.from(files).forEach(f => {
+      const chip = document.createElement('div');
+      chip.className = 'file-chip';
+      chip.innerHTML = `<span>📄 ${f.name}</span><button onclick="this.closest('.file-chip').remove()">✕</button>`;
+      list.appendChild(chip);
+    });
+  }
+ 
+  /* ── ACTIONS ── */
+  function sendToVendors() {
+    const title = document.getElementById('rfq-title').value.trim();
+    const deadline = document.getElementById('rfq-deadline').value;
+    if (!title) { showToast('RFQ title is required.'); return; }
+    if (!deadline) { showToast('Deadline is required.'); return; }
+    goToStep(2);
+    showToast('RFQ sent to vendors successfully!');
+  }
+ 
+  function saveDraft() {
+    showToast('Draft saved.');
+  }
+ 
+  /* ── TOAST ── */
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+</script>
+</body>
+</html>

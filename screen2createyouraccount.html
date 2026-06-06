@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registration — Screen 2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    :root {
+     --bg: #0b0d10;          
+  --surface: #12161a;      
+  --surface2: #1c2229;    
+  --input-bg: #080a0c;    
+  --border: #222b35;       
+  --accent: #714b67;       
+  --accent2: #017e84;      
+  --accent-dim: rgba(113, 75, 103, 0.15);
+  --text: #f1f5f9;         
+  --muted: #64748b;      
+  --nav-active: #1e2631;   
+  --danger: #ef4444;      
+  --warning: #f59e0b;      
+  --step-done: #10b981;
+    }
+ 
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      overflow-x: hidden;
+    }
+ 
+    /* animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 20%, rgba(232,85,62,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 80% 80%, rgba(240,165,0,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+ 
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 560px;
+    }
+ 
+    /* Screen label */
+    .screen-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .screen-label::before {
+      content: '';
+      display: inline-block;
+      width: 18px; height: 2px;
+      background: var(--accent);
+    }
+ 
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 5vw, 2.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 2rem;
+      letter-spacing: -0.02em;
+    }
+    h1 span { color: var(--accent); }
+ 
+    /* Card */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 2rem;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+ 
+    /* Photo upload */
+    .photo-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.8rem;
+    }
+    .photo-circle {
+      width: 96px; height: 96px;
+      border-radius: 50%;
+      border: 2px dashed var(--border);
+      background: var(--input-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .photo-circle:hover {
+      border-color: var(--accent);
+      background: #1f2235;
+    }
+    .photo-circle input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer;
+    }
+    .photo-circle svg { color: var(--muted); transition: color 0.2s; }
+    .photo-circle:hover svg { color: var(--accent); }
+    .photo-icon-label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 4px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    #photo-preview {
+      position: absolute; inset: 0;
+      object-fit: cover;
+      border-radius: 50%;
+      display: none;
+    }
+ 
+    /* Form grid */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.9rem;
+    }
+ 
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .field.full { grid-column: 1 / -1; }
+ 
+    label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding-left: 2px;
+    }
+ 
+    input, select, textarea {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      padding: 0.7rem 1rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      width: 100%;
+    }
+    input::placeholder, textarea::placeholder { color: var(--muted); }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 3px rgba(232,85,62,0.12);
+      background: #1e2030;
+    }
+    input.error, select.error, textarea.error {
+      border-color: #e05050;
+      box-shadow: 0 0 0 3px rgba(224,80,80,0.12);
+    }
+ 
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237a7d8e' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+      cursor: pointer;
+    }
+    select option { background: #1a1d28; }
+ 
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+      line-height: 1.6;
+    }
+ 
+    .error-msg {
+      font-size: 0.68rem;
+      color: #e05050;
+      padding-left: 2px;
+      min-height: 1em;
+    }
+ 
+    /* Submit */
+    .submit-row {
+      margin-top: 1.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+ 
+    .btn-register {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 20px rgba(232,85,62,0.35);
+    }
+    .btn-register::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.08);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn-register:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(232,85,62,0.45); }
+    .btn-register:hover::after { opacity: 1; }
+    .btn-register:active { transform: translateY(0); }
+    .btn-register:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+ 
+    .login-link {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .login-link a {
+      color: var(--accent2);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .login-link a:hover { text-decoration: underline; }
+ 
+    /* Success toast */
+    .toast {
+      display: none;
+      position: fixed;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e2a1e;
+      border: 1px solid #3a6e3a;
+      color: #7ed97e;
+      padding: 0.8rem 1.4rem;
+      border-radius: 100px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .toast.show {
+      display: block;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+ 
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .screen-label { animation: fadeUp 0.5s ease both; }
+    h1            { animation: fadeUp 0.5s 0.08s ease both; }
+    .card         { animation: fadeUp 0.5s 0.16s ease both; }
+ 
+    /* Responsive */
+    @media (max-width: 460px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+ 
+<div class="wrapper">
+  <div class="screen-label"></div>
+  <h1>Create your <span>account</span></h1>
+ 
+  <div class="card">
+    <!-- Photo upload -->
+    <div class="photo-wrap">
+      <div class="photo-circle" title="Upload photo">
+        <input type="file" id="photo-input" accept="image/*" />
+        <img id="photo-preview" alt="Preview"/>
+        <svg id="photo-icon" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5a4.5 4.5 0 100-9 4.5 4.5 0 000 9z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.5l1.5-2h9l1.5 2H21a2 2 0 012 2v9a2 2 0 01-2 2H3a2 2 0 01-2-2V9z"/>
+        </svg>
+        <span class="photo-icon-label" id="photo-label">Photo</span>
+      </div>
+    </div>
+ 
+    <form id="reg-form" novalidate>
+      <div class="form-grid">
+ 
+        <!-- First Name -->
+        <div class="field">
+          <label for="first-name">First Name</label>
+          <input type="text" id="first-name" name="firstName" placeholder="John" autocomplete="given-name"/>
+          <span class="error-msg" id="err-first"></span>
+        </div>
+ 
+        <!-- Last Name -->
+        <div class="field">
+          <label for="last-name">Last Name</label>
+          <input type="text" id="last-name" name="lastName" placeholder="Doe" autocomplete="family-name"/>
+          <span class="error-msg" id="err-last"></span>
+        </div>
+ 
+        <!-- Email -->
+        <div class="field">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="john@example.com" autocomplete="email"/>
+          <span class="error-msg" id="err-email"></span>
+        </div>
+ 
+        <!-- Phone -->
+        <div class="field">
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" name="phone" placeholder="+91 98765 43210" autocomplete="tel"/>
+          <span class="error-msg" id="err-phone"></span>
+        </div>
+ 
+        <!-- Role -->
+        <div class="field">
+          <label for="role">Role</label>
+          <select id="role" name="role">
+            <option value="" disabled selected>Select role…</option>
+            <option value="admin">Admin</option>
+            <option value="officer">Officer</option>
+            <option value="member">Member</option>
+          </select>
+          <span class="error-msg" id="err-role"></span>
+        </div>
+ 
+        <!-- Country -->
+        <div class="field">
+          <label for="country">Country</label>
+          <select id="country" name="country">
+            <option value="" disabled selected>Select country…</option>
+            <option>India</option>
+            <option>United States</option>
+            <option>United Kingdom</option>
+            <option>Canada</option>
+            <option>Australia</option>
+            <option>Germany</option>
+            <option>France</option>
+            <option>UAE</option>
+            <option>Singapore</option>
+            <option>Other</option>
+          </select>
+          <span class="error-msg" id="err-country"></span>
+        </div>
+ 
+        <!-- Additional Info -->
+        <div class="field full">
+          <label for="additional">Additional Information</label>
+          <textarea id="additional" name="additional" placeholder="Tell us anything extra…"></textarea>
+          <span class="error-msg" id="err-add"></span>
+        </div>
+ 
+      </div>
+ 
+      <div class="submit-row">
+        <button type="submit" class="btn-register" id="reg-btn">Register</button>
+        <p class="login-link">Already registered? <a href="screen1Welcome.html">Sign in</a></p>
+      </div>
+    </form>
+  </div>
+</div>
+ 
+<div class="toast" id="toast">Registration successful!
+  <a href="screen1Welcome.html" class="toast-link">Sign in</a>
+</div>
+ 
+<script>
+  /* --- Photo preview --- */
+  const photoInput = document.getElementById('photo-input');
+  const photoPreview = document.getElementById('photo-preview');
+  const photoIcon = document.getElementById('photo-icon');
+  const photoLabel = document.getElementById('photo-label');
+ 
+  photoInput.addEventListener('change', () => {
+    const file = photoInput.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      photoPreview.src = e.target.result;
+      photoPreview.style.display = 'block';
+      photoIcon.style.display = 'none';
+      photoLabel.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  });
+ 
+  /* --- Validation --- */
+  const rules = {
+    'first-name': v => v.trim().length >= 2  ? '' : 'First name must be at least 2 characters.',
+    'last-name':  v => v.trim().length >= 2  ? '' : 'Last name must be at least 2 characters.',
+    'email':      v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? '' : 'Enter a valid email address.',
+    'phone':      v => /^[+\d\s\-()]{7,}$/.test(v.trim()) ? '' : 'Enter a valid phone number.',
+    'role':       v => v ? '' : 'Please select a role.',
+    'country':    v => v ? '' : 'Please select a country.',
+  };
+ 
+  const errIds = {
+    'first-name': 'err-first',
+    'last-name':  'err-last',
+    'email':      'err-email',
+    'phone':      'err-phone',
+    'role':       'err-role',
+    'country':    'err-country',
+  };
+ 
+  function validateField(id) {
+    const el = document.getElementById(id);
+    const errEl = document.getElementById(errIds[id]);
+    if (!rules[id]) return true;
+    const msg = rules[id](el.value);
+    errEl.textContent = msg;
+    el.classList.toggle('error', !!msg);
+    return !msg;
+  }
+ 
+  // Live validation on blur
+  Object.keys(rules).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('blur', () => validateField(id));
+      el.addEventListener('input', () => {
+        if (el.classList.contains('error')) validateField(id);
+      });
+    }
+  });
+ 
+  /* --- Submit --- */
+  document.getElementById('reg-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const allValid = Object.keys(rules).map(validateField).every(Boolean);
+    if (!allValid) return;
+ 
+    const btn = document.getElementById('reg-btn');
+    btn.disabled = true;
+    btn.textContent = 'Registering…';
+ 
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'Register';
+      showToast();
+      e.target.reset();
+      photoPreview.style.display = 'none';
+      photoIcon.style.display = '';
+      photoLabel.style.display = '';
+    }, 1400);
+  });
+ 
+  /* --- Toast --- */
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
+</body>
+</html>

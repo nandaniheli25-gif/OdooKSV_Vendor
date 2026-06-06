@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VendorBridge – Submit Quotations</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+   --bg: #0b0d10;          
+  --surface: #12161a;      
+  --surface2: #1c2229;    
+  --input-bg: #080a0c;    
+  --border: #222b35;       
+  --accent: #714b67;       
+  --accent2: #017e84;      
+  --accent-dim: rgba(113, 75, 103, 0.15);
+  --text: #f1f5f9;         
+  --muted: #64748b;      
+  --nav-active: #1e2631;   
+  --danger: #ef4444;      
+  --warning: #f59e0b;      
+  --step-done: #10b981;
+  }
+ 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+ 
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+  }
+ 
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.15rem;
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+ 
+  .logo span { color: var(--accent); }
+ 
+  nav { padding: 14px 0; flex: 1; }
+ 
+  nav a {
+    display: block;
+    padding: 10px 20px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.3px;
+    transition: color 0.15s, background 0.15s;
+    border-left: 3px solid transparent;
+  }
+ 
+  nav a:hover { color: var(--text); background: var(--surface2); }
+ 
+  nav a.active {
+    color: var(--accent);
+    background: rgba(74,222,128,0.07);
+    border-left: 3px solid var(--accent);
+    font-weight: 500;
+  }
+ 
+  nav a::before { content: '– '; }
+ 
+  /* ── MAIN ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+ 
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+ 
+  .topbar-search {
+    flex: 1;
+    max-width: 320px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+ 
+  .topbar-search:focus { border-color: var(--accent); }
+ 
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+ 
+  .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700;
+  }
+ 
+  /* ── CONTENT ── */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px;
+  }
+ 
+  .content::-webkit-scrollbar { width: 5px; }
+  .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+ 
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+ 
+  .rfq-meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+ 
+  .rfq-meta span { color: var(--accent); }
+ 
+  /* ── RFQ SUMMARY BOX ── */
+  .summary-box {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+  }
+ 
+  .summary-box .label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 5px;
+  }
+ 
+  .summary-box p {
+    font-size: 0.8rem;
+    color: var(--text);
+    line-height: 1.6;
+  }
+ 
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 8px;
+  }
+ 
+  /* ── QUOTATION TABLE ── */
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+ 
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+ 
+  thead th {
+    background: var(--surface2);
+    padding: 9px 14px;
+    text-align: left;
+    color: var(--muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+ 
+  tbody tr { border-top: 1px solid var(--border); }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+ 
+  tbody td {
+    padding: 9px 14px;
+    color: var(--text);
+  }
+ 
+  tbody td input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid transparent;
+    padding: 2px 4px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+ 
+  tbody td input:focus { border-bottom-color: var(--accent); }
+ 
+  .del-btn {
+    background: none; border: none;
+    color: var(--danger); cursor: pointer;
+    font-size: 0.85rem; padding: 2px 6px;
+    opacity: 0.6; transition: opacity 0.15s;
+  }
+  .del-btn:hover { opacity: 1; }
+ 
+  .total-cell { color: var(--accent); font-weight: 500; }
+ 
+  /* ── ADD ROW BTN ── */
+  .btn-ghost {
+    background: transparent;
+    color: var(--accent);
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    padding: 5px 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 4px;
+  }
+  .btn-ghost:hover { background: rgba(74,222,128,0.07); }
+ 
+  /* ── BOTTOM GRID ── */
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 22px;
+  }
+ 
+  .field { display: flex; flex-direction: column; gap: 6px; }
+ 
+  label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+ 
+  input[type="text"],
+  input[type="number"],
+  textarea,
+  select {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+ 
+  input:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 90px; }
+ 
+  /* ── TOTALS CARD ── */
+  .totals-card {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+ 
+  .totals-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+  }
+ 
+  .totals-row .lbl { color: var(--muted); }
+  .totals-row .val { color: var(--text); font-weight: 500; }
+ 
+  .totals-divider { height: 1px; background: var(--border); }
+ 
+  .totals-row.grand .lbl,
+  .totals-row.grand .val {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+ 
+  /* ── FOOTER ── */
+  .form-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 32px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+ 
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 20px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.18s;
+    font-weight: 500;
+  }
+ 
+  .btn-primary {
+    background: var(--accent);
+    color: #0f0f0f;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover {
+    background: #22c55e;
+    box-shadow: 0 0 16px rgba(74,222,128,0.3);
+  }
+ 
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--border);
+  }
+  .btn-outline:hover { border-color: var(--muted); background: var(--surface2); }
+ 
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 12px 18px;
+    border-radius: 7px;
+    font-size: 0.8rem;
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: all 0.25s;
+    z-index: 99;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+ 
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+ 
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: #2e2e2e; border-radius: 4px; }
+</style>
+</head>
+<body>
+ 
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Vendor<span>Bridge</span></div>
+  <nav>
+    <a href="screen3dashboard.html">Dashboard</a>
+    <a href="screen4vendors.html">Vendors</a>
+    <a href="screen5rfq.html">RFQ's</a>
+    <a href="screen6quotation1.html" class="active">Quotations</a>
+    <a href="screen8approvalworkflow.html">Approvals</a>
+    <a href="screen9invoices.html">Invoices</a>
+    <a href="screen10reports.html">Reports</a>
+    <a href="screen11activity.html">Activity</a>
+  </nav>
+</aside>
+ 
+<!-- MAIN -->
+<div class="main">
+ 
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <input class="topbar-search" type="text" placeholder="Search…">
+    <div class="topbar-right">
+      <div class="avatar" style="background:#4ade80;color:#0f0f0f;">P</div>
+      <div class="avatar" style="background:#f97316;color:#fff;">O</div>
+      <div class="avatar" style="background:#a855f7;color:#fff;">A</div>
+    </div>
+  </div>
+ 
+  <!-- CONTENT -->
+  <div class="content">
+ 
+    <h1>Submit Quotations</h1>
+    <p class="rfq-meta">
+      RFQ: <span>office furniture procurement q2</span> – deadline
+      <span id="deadline-display">15 June 2025</span>
+    </p>
+ 
+    <!-- RFQ SUMMARY -->
+    <div class="summary-box">
+      <div class="label">RFQ Summary</div>
+      <p id="rfq-summary">Ergonomic chair × 25, standing desk × 10 – category furniture</p>
+    </div>
+ 
+    <!-- YOUR QUOTATION TABLE -->
+    <div class="section-title">Your Quotation</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>Unit Price (₹)</th>
+            <th>Total (₹)</th>
+            <th>Delivery (days)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="quote-body">
+          <tr>
+            <td><input type="text" value="Ergonomic chair" oninput="recalc()"></td>
+            <td><input type="number" value="25" min="0" style="width:70px" oninput="recalc(this)"></td>
+            <td><input type="number" value="3800" min="0" style="width:90px" oninput="recalc(this)"></td>
+            <td class="total-cell" id="row-total-0">₹95,000</td>
+            <td><input type="number" value="7" min="0" style="width:70px"></td>
+            <td><button class="del-btn" onclick="deleteRow(this)">✕</button></td>
+          </tr>
+          <tr>
+            <td><input type="text" value="Tech Core LTD" oninput="recalc()"></td>
+            <td><input type="number" value="10" min="0" style="width:70px" oninput="recalc(this)"></td>
+            <td><input type="number" value="5200" min="0" style="width:90px" oninput="recalc(this)"></td>
+            <td class="total-cell" id="row-total-1">₹52,000</td>
+            <td><input type="number" value="14" min="0" style="width:70px"></td>
+            <td><button class="del-btn" onclick="deleteRow(this)">✕</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <button class="btn-ghost" onclick="addRow()">+ add line item</button>
+ 
+    <!-- BOTTOM SECTION -->
+    <div class="bottom-grid">
+ 
+      <!-- LEFT: Tax + Notes -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="field">
+          <label>Tax / GST %</label>
+          <input type="number" id="gst-input" value="18" min="0" max="100" placeholder="e.g. 18" oninput="recalcTotals()">
+        </div>
+        <div class="field">
+          <label>Notes / Terms</label>
+          <textarea id="notes-input" placeholder="e.g. Payment terms: 30 days net…">Payment terms: 30 days net…</textarea>
+        </div>
+      </div>
+ 
+      <!-- RIGHT: Totals Card -->
+      <div class="totals-card">
+        <div class="totals-row">
+          <span class="lbl">Subtotal</span>
+          <span class="val" id="subtotal">₹1,47,000</span>
+        </div>
+        <div class="totals-row">
+          <span class="lbl" id="gst-label">GST (18%)</span>
+          <span class="val" id="gst-amount">₹26,460</span>
+        </div>
+        <div class="totals-divider"></div>
+        <div class="totals-row grand">
+          <span class="lbl">Grand Total</span>
+          <span class="val" id="grand-total">₹1,73,460</span>
+        </div>
+      </div>
+ 
+    </div>
+ 
+  </div><!-- /content -->
+ 
+  <!-- FOOTER -->
+  <div class="form-footer">
+    <button class="btn btn-primary" onclick="submitQuotation()">Submit Quotation</button>
+    <button class="btn btn-outline" onclick="saveDraft()">Save Draft</button>
+  </div>
+ 
+</div><!-- /main -->
+ 
+<div class="toast" id="toast"></div>
+ 
+<script>
+  /* ── ROW MANAGEMENT ── */
+  let rowCount = 2;
+ 
+  function addRow() {
+    const tbody = document.getElementById('quote-body');
+    const idx = rowCount++;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" placeholder="Item name" oninput="recalc()"></td>
+      <td><input type="number" value="1" min="0" style="width:70px" oninput="recalc(this)"></td>
+      <td><input type="number" value="0" min="0" style="width:90px" oninput="recalc(this)"></td>
+      <td class="total-cell" id="row-total-${idx}">₹0</td>
+      <td><input type="number" value="0" min="0" style="width:70px"></td>
+      <td><button class="del-btn" onclick="deleteRow(this)">✕</button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('input').focus();
+    recalc();
+  }
+ 
+  function deleteRow(btn) {
+    const rows = document.getElementById('quote-body').rows;
+    if (rows.length <= 1) { showToast('At least one line item required.'); return; }
+    btn.closest('tr').remove();
+    recalc();
+  }
+ 
+  /* ── RECALCULATE ── */
+  function recalc() {
+    const rows = document.querySelectorAll('#quote-body tr');
+    rows.forEach((tr, i) => {
+      const inputs = tr.querySelectorAll('input[type="number"]');
+      const qty   = parseFloat(inputs[0]?.value) || 0;
+      const price = parseFloat(inputs[1]?.value) || 0;
+      const total = qty * price;
+      const cell  = tr.querySelector('.total-cell');
+      if (cell) cell.textContent = '₹' + fmt(total);
+    });
+    recalcTotals();
+  }
+ 
+  function recalcTotals() {
+    const rows   = document.querySelectorAll('#quote-body tr');
+    let subtotal = 0;
+    rows.forEach(tr => {
+      const inputs = tr.querySelectorAll('input[type="number"]');
+      const qty   = parseFloat(inputs[0]?.value) || 0;
+      const price = parseFloat(inputs[1]?.value) || 0;
+      subtotal += qty * price;
+    });
+ 
+    const gstPct  = parseFloat(document.getElementById('gst-input').value) || 0;
+    const gstAmt  = subtotal * (gstPct / 100);
+    const grand   = subtotal + gstAmt;
+ 
+    document.getElementById('subtotal').textContent    = '₹' + fmt(subtotal);
+    document.getElementById('gst-label').textContent   = `GST (${gstPct}%)`;
+    document.getElementById('gst-amount').textContent  = '₹' + fmt(gstAmt);
+    document.getElementById('grand-total').textContent = '₹' + fmt(grand);
+  }
+ 
+  function fmt(n) {
+    return Math.round(n).toLocaleString('en-IN');
+  }
+ 
+  /* ── ACTIONS ── */
+  function submitQuotation() {
+    const rows   = document.querySelectorAll('#quote-body tr');
+    let valid    = true;
+    rows.forEach(tr => {
+      const name = tr.querySelector('input[type="text"]')?.value.trim();
+      if (!name) valid = false;
+    });
+    if (!valid) { showToast('Please fill all item names.'); return; }
+    window.location.href = "screen7quotation2.html";
+  }
+ 
+  function saveDraft() {
+    showToast('Draft saved.');
+  }
+ 
+  /* ── TOAST ── */
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  }
+ 
+  /* ── INIT ── */
+  recalc();
+</script>
+</body>
+</html>
